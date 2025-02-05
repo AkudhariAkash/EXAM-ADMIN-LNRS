@@ -24,7 +24,7 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 
 // API base URL
-const API_URL = "http://localhost:5000/api"
+const API_URL = "https://lnrs-exam-portal-backend.onrender.com/api"
 
 interface Question {
   _id: string
