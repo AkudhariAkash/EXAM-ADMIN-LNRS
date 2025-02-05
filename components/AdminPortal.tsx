@@ -252,7 +252,6 @@ const AdminPortal: React.FC = () => {
   })
   const [users, setUsers] = useState<User[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
-  const [activeSection, setActiveSection] = useState<string | null>(null)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [newUser, setNewUser] = useState({
@@ -262,6 +261,7 @@ const AdminPortal: React.FC = () => {
     role: "user",
   })
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false)
+  const [activeSection, setActiveSection] = useState<string | null>("questions")
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
@@ -528,11 +528,6 @@ const AdminPortal: React.FC = () => {
     }
   }
 
-  const handleEditUser = (user: User) => {
-    console.log("Edit user:", user)
-    // Implement edit user functionality
-  }
-
   const handleDeleteUser = async (userId: string) => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
@@ -552,7 +547,7 @@ const AdminPortal: React.FC = () => {
   }
 
   const handleSectionClick = (section: string) => {
-    setActiveSection(section === activeSection ? null : section)
+    setActiveSection(section)
   }
 
   const handleExpandSection = (section: string) => {
@@ -682,7 +677,7 @@ const AdminPortal: React.FC = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {activeSection === "questions" && (
+          {(activeSection === "questions" || activeSection === null) && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 h-full">
               <div className="bg-white p-6 rounded-xl shadow-md h-full overflow-y-auto">
                 <h2 className="text-xl font-semibold mb-4">Add New Question</h2>
@@ -868,7 +863,7 @@ const AdminPortal: React.FC = () => {
                           <div className="text-sm font-medium text-gray-900">{user.email}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green800">
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
                             {user.role}
                           </span>
                         </td>
@@ -894,10 +889,10 @@ const AdminPortal: React.FC = () => {
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-xl font-semibold mb-6">Exam Submissions</h2>
               <div className="overflow-x-auto">
-                <table className="min-w-full dividey divide-gray-200">
+                <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         User
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -983,20 +978,6 @@ const AdminPortal: React.FC = () => {
                     placeholder="Enter password"
                     required
                   />
-                </div>
-                <div>
-                  <label htmlFor="role" className="block text-sm font-medium text-gray-700">
-                    Role
-                  </label>
-                  <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
                 <Button type="submit" className="w-full">
                   <UserPlus className="w-4 h-4 mr-2" />
