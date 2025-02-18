@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import {
   LogOut,
@@ -24,11 +25,12 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 
 // API base URL
-const API_URL = "https://lnrs-exam-portal-backend.onrender.com/api"
+const API_URL = "https://lnrs-exam-and-admin-backend.onrender.com/api"
 
 interface Question {
   _id: string
   section: string
+  questionNumber: number
   text: string
   options?: string[]
   answer?: string
@@ -49,6 +51,7 @@ interface Submission {
   user: {
     _id: string
     email: string
+    name: string
   }
   answers: {
     question: string
@@ -100,10 +103,18 @@ const FullPageQuestions: React.FC<{
         </div>
         {filteredQuestions.length > 0 ? (
           <div className="space-y-8">
-            {filteredQuestions.map((question, index) => (
-              <div key={`${question._id}-${index}`} className="bg-white p-6 rounded-xl shadow-md">
+            {filteredQuestions.map((question) => (
+              <div key={question._id} className="bg-white p-6 rounded-xl shadow-md">
                 {editingQuestion && editingQuestion._id === question._id ? (
                   <div className="space-y-4">
+                    <Input
+                      type="number"
+                      value={editingQuestion.questionNumber}
+                      onChange={(e) =>
+                        setEditingQuestion({ ...editingQuestion, questionNumber: Number.parseInt(e.target.value) })
+                      }
+                      placeholder="Question number"
+                    />
                     <Input
                       value={editingQuestion.text}
                       onChange={(e) => setEditingQuestion({ ...editingQuestion, text: e.target.value })}
@@ -172,7 +183,9 @@ const FullPageQuestions: React.FC<{
                   <div>
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h3 className="text-xl font-medium text-gray-900">Question {index + 1}</h3>
+                        <h3 className="text-xl font-medium text-gray-900">
+                          Question {question.questionNumber} (ID: {question._id})
+                        </h3>
                         <p className="text-lg mt-2">{question.text}</p>
                       </div>
                       <div className="flex space-x-2">
@@ -245,6 +258,7 @@ const AdminPortal: React.FC = () => {
   const [editingQuestion, setEditingQuestion] = useState<Question | null>(null)
   const [newQuestion, setNewQuestion] = useState<Partial<Question>>({
     section: "",
+    questionNumber: 0,
     text: "",
     options: ["", "", "", ""],
     answer: "",
@@ -288,7 +302,7 @@ const AdminPortal: React.FC = () => {
       let hasMore = true
 
       while (hasMore) {
-        const response = await axios.get(`${API_URL}/questions`, {
+        const response = await axios.get(`${API_URL}/questions/admin`, {
           params: { page, limit: 100 }, // Fetch 100 questions per request
         })
 
@@ -316,7 +330,6 @@ const AdminPortal: React.FC = () => {
       if (uniqueQuestions.length === 0) {
         toast.info("No questions found")
       }
-      //Removed toast message for fetched questions
     } catch (error) {
       console.error("Error fetching questions:", error)
       if (axios.isAxiosError(error) && error.response?.status === 401) {
@@ -347,7 +360,9 @@ const AdminPortal: React.FC = () => {
 
   const fetchSubmissions = async () => {
     try {
-      const response = await axios.get(`${API_URL}/admin/exams`)
+      const response = await axios.get(`${API_URL}/admin/exams`, {
+        params: { limit: 200 },
+      })
       setSubmissions(response.data.exams)
     } catch (error) {
       console.error("Error fetching submissions:", error)
@@ -404,6 +419,16 @@ const AdminPortal: React.FC = () => {
       return
     }
 
+    if (!newQuestion.section) {
+      toast.error("Section is required")
+      return
+    }
+
+    if (!newQuestion.questionNumber || newQuestion.questionNumber <= 0) {
+      toast.error("Question number is required and must be greater than 0")
+      return
+    }
+
     if (newQuestion.section === "mcqs" || newQuestion.section === "ai" || newQuestion.section === "aptitude") {
       const validOptions = newQuestion.options?.filter((option) => option.trim() !== "")
       if (!validOptions || validOptions.length !== 4) {
@@ -437,7 +462,7 @@ const AdminPortal: React.FC = () => {
         delete questionToSend.answer
       }
 
-      const response = await axios.post(`${API_URL}/questions/`, questionToSend)
+      const response = await axios.post(`${API_URL}/questions`, questionToSend)
 
       if (response.data.success) {
         toast.success(`Question added successfully`)
@@ -445,6 +470,7 @@ const AdminPortal: React.FC = () => {
         fetchQuestions()
         setNewQuestion({
           section: "",
+          questionNumber: 0,
           text: "",
           options: ["", "", "", ""],
           answer: "",
@@ -698,6 +724,15 @@ const AdminPortal: React.FC = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                    <Input
+                      type="number"
+                      value={newQuestion.questionNumber || ""}
+                      onChange={(e) =>
+                        setNewQuestion({ ...newQuestion, questionNumber: Number.parseInt(e.target.value) || 0 })
+                      }
+                      placeholder="Question number"
+                      required
+                    />
                   </div>
                   <Input
                     value={newQuestion.text}
@@ -834,7 +869,7 @@ const AdminPortal: React.FC = () => {
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        ID
+                        S.No
                       </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Name
@@ -852,9 +887,13 @@ const AdminPortal: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user, index) => (
-                      <tr key={`user-${user._id}-${index}`} className="hover:bg-gray-50">
+                      <tr
+                        key={`user-${user._id}-${index}\`}                    {users.map((user, index) => (
+                      <tr key={\`user-${user._id}-${index}`}
+                        className="hover:bg-gray-50"
+                      >
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{user._id}</div>
+                          <div className="text-sm font-medium text-gray-900">{index + 1}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{user.name}</div>
@@ -887,53 +926,85 @@ const AdminPortal: React.FC = () => {
 
           {activeSection === "submissions" && (
             <div className="bg-white p-6 rounded-xl shadow-md">
-              <h2 className="text-xl font-semibold mb-6">Exam Submissions</h2>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        User
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Score
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {submissions.map((submission, index) => (
-                      <tr key={`submission-${submission._id}-${index}`} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{submission.user.email}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{submission.score}%</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span
-                            className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                              submission.status === "completed"
-                                ? "bg-green-100 text-green-800"
-                                : "bg-yellow-100 text-yellow-800"
-                            }`}
-                          >
-                            {submission.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          {new Date(submission.startTime).toLocaleDateString()}
-                        </td>
+              <h2 className="text-xl font-semibold mb-6">Exam Submissions </h2>
+              {submissions.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          User
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Score
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Start Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          End Time
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Duration
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {submissions.map((submission, index) => {
+                        const startTime = new Date(submission.startTime)
+                        const endTime = submission.endTime ? new Date(submission.endTime) : null
+                        const duration = endTime
+                          ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)) // Duration in minutes
+                          : null
+
+                        return (
+                          <tr key={`submission-${submission._id}-${index}`} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{submission.user.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-gray-900">{submission.user.name}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">{submission.score}%</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span
+                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                                  submission.status === "completed"
+                                    ? "bg-green-100 text-green-800"
+                                    : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
+                                {submission.status}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {startTime.toLocaleString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {endTime ? endTime.toLocaleString() : "N/A"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {duration ? `${duration} minutes` : "N/A"}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-xl text-gray-600">No submissions available.</p>
+                </div>
+              )}
             </div>
           )}
 

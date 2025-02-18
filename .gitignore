@@ -1,5 +1,13 @@
+# Node.js
 node_modules/
-node_modules/
-node_modules/
-node_modules/
-node_modules/
+npm-debug.log*
+
+# Next.js
+.next/
+out/
+*.log
+*.lock
+
+# OS
+.DS_Store
+Thumbs.db
