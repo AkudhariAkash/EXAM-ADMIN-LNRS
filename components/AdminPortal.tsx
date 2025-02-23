@@ -1,7 +1,7 @@
 "use client"
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import {
   LogOut,
@@ -16,13 +16,16 @@ import {
   ChevronRight,
   ArrowLeft,
   Save,
+  Eye,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import axios from "axios"
-import { toast, ToastContainer } from "react-toastify"
+import { toast } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import { ToastContainer } from "react-toastify"
 
 // API base URL
 const API_URL = "https://lnrs-exam-and-admin-backend.onrender.com/api"
@@ -62,6 +65,23 @@ interface Submission {
   status: string
   startTime: string
   endTime?: string
+}
+
+interface SubmissionResponse {
+  [section: string]: Array<{
+    question: {
+      _id: string
+      text: string
+      options?: string[]
+      answer?: string
+      section: string
+    }
+    answer: string
+    isCorrect: boolean
+    code?: string
+    testCasesPassed?: number
+    totalTestCases?: number
+  }>
 }
 
 const SECTIONS = ["mcqs", "aptitude", "ai", "coding"]
@@ -276,6 +296,8 @@ const AdminPortal: React.FC = () => {
   })
   const [isLoadingQuestions, setIsLoadingQuestions] = useState(false)
   const [activeSection, setActiveSection] = useState<string | null>("questions")
+  const [selectedSubmission, setSelectedSubmission] = useState<SubmissionResponse[] | null>(null)
+  const [isSubmissionDialogOpen, setIsSubmissionDialogOpen] = useState(false)
 
   useEffect(() => {
     const storedToken = localStorage.getItem("token")
@@ -578,6 +600,134 @@ const AdminPortal: React.FC = () => {
 
   const handleExpandSection = (section: string) => {
     setExpandedSection(section === expandedSection ? null : section)
+  }
+
+  const renderSubmissions = () => (
+    <div className="bg-white p-6 rounded-xl shadow-md">
+      <h2 className="text-xl font-semibold mb-6">Exam Submissions</h2>
+      {submissions.length > 0 ? (
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">S.No</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Score
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Start Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  End Time
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Duration
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {submissions.map((submission, index) => {
+                const startTime = new Date(submission.startTime)
+                const endTime = submission.endTime ? new Date(submission.endTime) : null
+                const duration = endTime
+                  ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)) // Duration in minutes
+                  : null
+
+                return (
+                  <tr key={`submission-${submission._id}-${index}`} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{index + 1}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{submission.user.email}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">{submission.user.name}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">{submission.score}%</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                          submission.status === "completed"
+                            ? "bg-green-100 text-green-800"
+                            : "bg-yellow-100 text-yellow-800"
+                        }`}
+                      >
+                        {submission.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{startTime.toLocaleString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {endTime ? endTime.toLocaleString() : "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {duration ? `${duration} minutes` : "N/A"}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <Button
+                        onClick={() => handleViewSubmission(submission._id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        <Eye className="h-4 w-4 mr-2" />
+                        View
+                      </Button>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="text-center py-8">
+          <p className="text-xl text-gray-600">No submissions available.</p>
+        </div>
+      )}
+    </div>
+  )
+
+  const handleViewSubmission = async (submissionId: string) => {
+    try {
+      const response = await axios.get(`${API_URL}/exams/${submissionId}/submissions`)
+
+      if (response.data && response.data.responses) {
+        const groupedAnswers = response.data.responses.reduce((acc: any, answer: any) => {
+          const section = answer.question.section
+          if (!acc[section]) {
+            acc[section] = []
+          }
+          acc[section].push({
+            question: answer.question,
+            answer: answer.answer,
+            isCorrect: answer.isCorrect,
+            code: answer.code,
+            testCasesPassed: answer.testCasesPassed,
+            totalTestCases: answer.totalTestCases,
+          })
+          return acc
+        }, {})
+
+        setSelectedSubmission(groupedAnswers)
+        setIsSubmissionDialogOpen(true)
+      } else {
+        throw new Error("No submission data available")
+      }
+    } catch (error) {
+      console.error("Error fetching submission details:", error)
+      toast.error("Failed to fetch submission details")
+    }
   }
 
   if (!isLoggedIn) {
@@ -887,11 +1037,7 @@ const AdminPortal: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user, index) => (
-                      <tr
-                        key={`user-${user._id}-${index}\`}                    {users.map((user, index) => (
-                      <tr key={\`user-${user._id}-${index}`}
-                        className="hover:bg-gray-50"
-                      >
+                      <tr key={`user-${user._id}-${index}`} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm font-medium text-gray-900">{index + 1}</div>
                         </td>
@@ -924,89 +1070,7 @@ const AdminPortal: React.FC = () => {
             </div>
           )}
 
-          {activeSection === "submissions" && (
-            <div className="bg-white p-6 rounded-xl shadow-md">
-              <h2 className="text-xl font-semibold mb-6">Exam Submissions </h2>
-              {submissions.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          User
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Name
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Score
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Start Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          End Time
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Duration
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {submissions.map((submission, index) => {
-                        const startTime = new Date(submission.startTime)
-                        const endTime = submission.endTime ? new Date(submission.endTime) : null
-                        const duration = endTime
-                          ? Math.round((endTime.getTime() - startTime.getTime()) / (1000 * 60)) // Duration in minutes
-                          : null
-
-                        return (
-                          <tr key={`submission-${submission._id}-${index}`} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{submission.user.email}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm font-medium text-gray-900">{submission.user.name}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-900">{submission.score}%</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span
-                                className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                                  submission.status === "completed"
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-yellow-100 text-yellow-800"
-                                }`}
-                              >
-                                {submission.status}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {startTime.toLocaleString()}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {endTime ? endTime.toLocaleString() : "N/A"}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {duration ? `${duration} minutes` : "N/A"}
-                            </td>
-                          </tr>
-                        )
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-xl text-gray-600">No submissions available.</p>
-                </div>
-              )}
-            </div>
-          )}
+          {activeSection === "submissions" && renderSubmissions()}
 
           {activeSection === "signup" && (
             <div className="bg-white p-6 rounded-xl shadow-md">
@@ -1060,6 +1124,66 @@ const AdminPortal: React.FC = () => {
         </div>
         <ToastContainer position="top-center" autoClose={3000} style={{ zIndex: 9999 }} />
       </div>
+
+      <Dialog open={isSubmissionDialogOpen} onOpenChange={setIsSubmissionDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Submission Details</DialogTitle>
+            <DialogDescription>Review the user's answers by section</DialogDescription>
+          </DialogHeader>
+          {selectedSubmission && (
+            <div className="space-y-6">
+              {Object.entries(selectedSubmission).map(([section, answers]: [string, any]) => (
+                <div key={section} className="border rounded-lg p-4">
+                  <h3 className="text-lg font-semibold mb-4 capitalize">{section} Section</h3>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Question</TableHead>
+                        <TableHead>User Answer</TableHead>
+                        <TableHead>Correct Answer</TableHead>
+                        <TableHead>Result</TableHead>
+                        {section === "coding" && <TableHead>Test Cases</TableHead>}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {answers.map((response: any, index: number) => (
+                        <TableRow key={index}>
+                          <TableCell className="max-w-md">{response.question.text}</TableCell>
+                          <TableCell>
+                            {section === "coding" ? (
+                              <div className="max-h-32 overflow-y-auto">
+                                <pre className="text-sm bg-muted p-2 rounded">{response.code || response.answer}</pre>
+                              </div>
+                            ) : (
+                              response.answer
+                            )}
+                          </TableCell>
+                          <TableCell>{response.question.answer || "N/A"}</TableCell>
+                          <TableCell>
+                            <span
+                              className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                                response.isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
+                              }`}
+                            >
+                              {response.isCorrect ? "Correct" : "Incorrect"}
+                            </span>
+                          </TableCell>
+                          {section === "coding" && (
+                            <TableCell>
+                              {response.testCasesPassed}/{response.totalTestCases} passed
+                            </TableCell>
+                          )}
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ))}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
