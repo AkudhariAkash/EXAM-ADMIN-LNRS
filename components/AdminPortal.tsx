@@ -28,6 +28,7 @@ import "react-toastify/dist/ReactToastify.css"
 import { ToastContainer } from "react-toastify"
 
 // API base URL
+//const API_URL = "http://localhost:5000/api"
 const API_URL = "https://lnrs-exam-and-admin-backend.onrender.com/api"
 
 interface Question {
@@ -42,7 +43,7 @@ interface Question {
   createdAt: string
 }
 
-interface User {
+interface UserType {
   _id: string
   name: string
   email: string
@@ -116,7 +117,7 @@ const FullPageQuestions: React.FC<{
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-semibold">{section.toUpperCase()} Questions</h2>
-          <Button onClick={onBack} variant="outline">
+          <Button onClick={onBack} variant="outline" suppressHydrationWarning={true} data-has-listeners="true">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Sections
           </Button>
@@ -134,11 +135,13 @@ const FullPageQuestions: React.FC<{
                         setEditingQuestion({ ...editingQuestion, questionNumber: Number.parseInt(e.target.value) })
                       }
                       placeholder="Question number"
+                      data-has-listeners="true"
                     />
                     <Input
                       value={editingQuestion.text}
                       onChange={(e) => setEditingQuestion({ ...editingQuestion, text: e.target.value })}
                       placeholder="Question text"
+                      data-has-listeners="true"
                     />
                     {(section === "mcqs" || section === "ai" || section === "aptitude") && (
                       <div className="space-y-2">
@@ -153,12 +156,15 @@ const FullPageQuestions: React.FC<{
                               setEditingQuestion({ ...editingQuestion, options: newOptions })
                             }}
                             placeholder={`Option ${optionIndex + 1}`}
+                            data-has-listeners="true"
                           />
                         ))}
                         <Input
                           value={editingQuestion.answer}
                           onChange={(e) => setEditingQuestion({ ...editingQuestion, answer: e.target.value })}
                           placeholder="Correct answer"
+                          suppressHydrationWarning={true}
+                          data-has-listeners="true"
                         />
                       </div>
                     )}
@@ -175,6 +181,8 @@ const FullPageQuestions: React.FC<{
                                 setEditingQuestion({ ...editingQuestion, testCases: newTestCases })
                               }}
                               placeholder="Input"
+                              suppressHydrationWarning={true}
+                              data-has-listeners="true"
                             />
                             <Input
                               value={testCase.output}
@@ -184,16 +192,23 @@ const FullPageQuestions: React.FC<{
                                 setEditingQuestion({ ...editingQuestion, testCases: newTestCases })
                               }}
                               placeholder="Expected Output"
+                              suppressHydrationWarning={true}
+                              data-has-listeners="true"
                             />
                           </div>
                         ))}
                       </div>
                     )}
                     <div className="flex justify-end space-x-2">
-                      <Button onClick={handleCancelEdit} variant="outline">
+                      <Button
+                        onClick={handleCancelEdit}
+                        variant="outline"
+                        suppressHydrationWarning={true}
+                        data-has-listeners="true"
+                      >
                         Cancel
                       </Button>
-                      <Button onClick={handleSaveQuestion}>
+                      <Button onClick={handleSaveQuestion} suppressHydrationWarning={true} data-has-listeners="true">
                         <Save className="h-4 w-4 mr-2" />
                         Save
                       </Button>
@@ -209,7 +224,13 @@ const FullPageQuestions: React.FC<{
                         <p className="text-lg mt-2">{question.text}</p>
                       </div>
                       <div className="flex space-x-2">
-                        <Button onClick={() => handleEditQuestion(question)} variant="outline" size="sm">
+                        <Button
+                          onClick={() => handleEditQuestion(question)}
+                          variant="outline"
+                          size="sm"
+                          suppressHydrationWarning={true}
+                          data-has-listeners="true"
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                         <Button
@@ -217,6 +238,8 @@ const FullPageQuestions: React.FC<{
                           variant="outline"
                           size="sm"
                           className="text-red-600 hover:text-red-700"
+                          suppressHydrationWarning={true}
+                          data-has-listeners="true"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -284,7 +307,7 @@ const AdminPortal: React.FC = () => {
     answer: "",
     testCases: [{ input: "", output: "", isHidden: false }],
   })
-  const [users, setUsers] = useState<User[]>([])
+  const [users, setUsers] = useState<UserType[]>([])
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -642,18 +665,30 @@ const AdminPortal: React.FC = () => {
                   : null
 
                 return (
-                  <tr key={`submission-${submission._id}-${index}`} className="hover:bg-gray-50">
+                  <tr
+                    key={`submission-${submission._id}-${index}`}
+                    className="hover:bg-gray-50"
+                    data-has-listeners="true"
+                  >
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{index + 1}</div>
+                      <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                        {index + 1}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{submission.user.email}</div>
+                      <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                        {submission.user?.email || "N/A"}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{submission.user.name}</div>
+                      <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                        {submission.user?.name || "N/A"}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{submission.score}%</div>
+                      <div className="text-sm text-gray-900" suppressHydrationWarning={true}>
+                        {submission.score}%
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -662,15 +697,18 @@ const AdminPortal: React.FC = () => {
                             ? "bg-green-100 text-green-800"
                             : "bg-yellow-100 text-yellow-800"
                         }`}
+                        suppressHydrationWarning={true}
                       >
                         {submission.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{startTime.toLocaleString()}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" suppressHydrationWarning={true}>
+                      {startTime.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" suppressHydrationWarning={true}>
                       {endTime ? endTime.toLocaleString() : "N/A"}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" suppressHydrationWarning={true}>
                       {duration ? `${duration} minutes` : "N/A"}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -679,6 +717,8 @@ const AdminPortal: React.FC = () => {
                         variant="outline"
                         size="sm"
                         className="text-blue-600 hover:text-blue-700"
+                        suppressHydrationWarning={true}
+                        data-has-listeners="true"
                       >
                         <Eye className="h-4 w-4 mr-2" />
                         View
@@ -704,17 +744,18 @@ const AdminPortal: React.FC = () => {
 
       if (response.data && response.data.responses) {
         const groupedAnswers = response.data.responses.reduce((acc: any, answer: any) => {
-          const section = answer.question.section
+          // Add null check for answer.question
+          const section = answer.question?.section || "unknown"
           if (!acc[section]) {
             acc[section] = []
           }
           acc[section].push({
-            question: answer.question,
-            answer: answer.answer,
-            isCorrect: answer.isCorrect,
-            code: answer.code,
-            testCasesPassed: answer.testCasesPassed,
-            totalTestCases: answer.totalTestCases,
+            question: answer.question || {},
+            answer: answer.answer || "",
+            isCorrect: answer.isCorrect || false,
+            code: answer.code || "",
+            testCasesPassed: answer.testCasesPassed || 0,
+            totalTestCases: answer.totalTestCases || 0,
           })
           return acc
         }, {})
@@ -748,7 +789,12 @@ const AdminPortal: React.FC = () => {
               <p className="text-gray-600 mt-2">Sign in to manage questions and users</p>
             </div>
 
-            <form onSubmit={handleLogin} className="space-y-6">
+            <form
+              onSubmit={handleLogin}
+              className="space-y-6"
+              suppressHydrationWarning={true}
+              data-has-listeners="true"
+            >
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                   Email
@@ -765,6 +811,8 @@ const AdminPortal: React.FC = () => {
                     className="pl-10"
                     placeholder="admin@example.com"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
                 </div>
               </div>
@@ -784,10 +832,18 @@ const AdminPortal: React.FC = () => {
                     className="pl-10"
                     placeholder="Enter your password"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full" disabled={loading}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loading}
+                suppressHydrationWarning={true}
+                data-has-listeners="true"
+              >
                 {loading ? (
                   "Signing in..."
                 ) : (
@@ -811,7 +867,7 @@ const AdminPortal: React.FC = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-br from-blue-600 to-purple-600 bg-clip-text text-transparent">
             Admin Portal
           </h1>
-          <Button onClick={handleLogout} variant="outline">
+          <Button onClick={handleLogout} variant="outline" suppressHydrationWarning={true} data-has-listeners="true">
             <LogOut className="mr-2 h-5 w-5" />
             <span>Log Out</span>
           </Button>
@@ -822,6 +878,8 @@ const AdminPortal: React.FC = () => {
             onClick={() => handleSectionClick("questions")}
             variant={activeSection === "questions" ? "default" : "outline"}
             className="w-full"
+            suppressHydrationWarning={true}
+            data-has-listeners="true"
           >
             <Edit className="w-4 h-4 mr-2" />
             Question Management
@@ -830,6 +888,8 @@ const AdminPortal: React.FC = () => {
             onClick={() => handleSectionClick("users")}
             variant={activeSection === "users" ? "default" : "outline"}
             className="w-full"
+            suppressHydrationWarning={true}
+            data-has-listeners="true"
           >
             <User className="w-4 h-4 mr-2" />
             User Management
@@ -838,6 +898,8 @@ const AdminPortal: React.FC = () => {
             onClick={() => handleSectionClick("submissions")}
             variant={activeSection === "submissions" ? "default" : "outline"}
             className="w-full"
+            suppressHydrationWarning={true}
+            data-has-listeners="true"
           >
             <FileText className="w-4 h-4 mr-2" />
             Exam Submissions
@@ -846,6 +908,8 @@ const AdminPortal: React.FC = () => {
             onClick={() => handleSectionClick("signup")}
             variant={activeSection === "signup" ? "default" : "outline"}
             className="w-full"
+            suppressHydrationWarning={true}
+            data-has-listeners="true"
           >
             <UserPlus className="w-4 h-4 mr-2" />
             Add New User
@@ -863,12 +927,17 @@ const AdminPortal: React.FC = () => {
                       value={newQuestion.section}
                       onValueChange={(value) => setNewQuestion({ ...newQuestion, section: value })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select section" />
+                      <SelectTrigger suppressHydrationWarning={true} data-has-listeners="true">
+                        <SelectValue placeholder="Select section" suppressHydrationWarning={true} />
                       </SelectTrigger>
-                      <SelectContent>
+                      <SelectContent suppressHydrationWarning={true}>
                         {SECTIONS.map((section) => (
-                          <SelectItem key={section} value={section}>
+                          <SelectItem
+                            key={section}
+                            value={section}
+                            suppressHydrationWarning={true}
+                            data-has-listeners="true"
+                          >
                             {section.toUpperCase()}
                           </SelectItem>
                         ))}
@@ -882,6 +951,8 @@ const AdminPortal: React.FC = () => {
                       }
                       placeholder="Question number"
                       required
+                      suppressHydrationWarning={true}
+                      data-has-listeners="true"
                     />
                   </div>
                   <Input
@@ -889,6 +960,8 @@ const AdminPortal: React.FC = () => {
                     onChange={(e) => setNewQuestion({ ...newQuestion, text: e.target.value })}
                     placeholder="Question text"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
 
                   {(newQuestion.section === "mcqs" ||
@@ -906,6 +979,8 @@ const AdminPortal: React.FC = () => {
                               setNewQuestion({ ...newQuestion, options: newOptions })
                             }}
                             placeholder={`Option ${index + 1}`}
+                            suppressHydrationWarning={true}
+                            data-has-listeners="true"
                           />
                         ))}
                       </div>
@@ -913,6 +988,8 @@ const AdminPortal: React.FC = () => {
                         value={newQuestion.answer}
                         onChange={(e) => setNewQuestion({ ...newQuestion, answer: e.target.value })}
                         placeholder="Correct answer"
+                        suppressHydrationWarning={true}
+                        data-has-listeners="true"
                       />
                     </div>
                   )}
@@ -933,6 +1010,8 @@ const AdminPortal: React.FC = () => {
                                   setNewQuestion({ ...newQuestion, testCases: newTestCases })
                                 }}
                                 placeholder="Input"
+                                suppressHydrationWarning={true}
+                                data-has-listeners="true"
                               />
                             </div>
                             <div>
@@ -945,6 +1024,8 @@ const AdminPortal: React.FC = () => {
                                   setNewQuestion({ ...newQuestion, testCases: newTestCases })
                                 }}
                                 placeholder="Output"
+                                suppressHydrationWarning={true}
+                                data-has-listeners="true"
                               />
                             </div>
                           </div>
@@ -958,6 +1039,8 @@ const AdminPortal: React.FC = () => {
                           }
                           variant="outline"
                           size="sm"
+                          suppressHydrationWarning={true}
+                          data-has-listeners="true"
                         >
                           <Plus className="h-4 w-4 mr-2" />
                           Add Test Case
@@ -966,7 +1049,12 @@ const AdminPortal: React.FC = () => {
                     </div>
                   )}
                 </div>
-                <Button onClick={handleAddQuestion} className="mt-6">
+                <Button
+                  onClick={handleAddQuestion}
+                  className="mt-6"
+                  suppressHydrationWarning={true}
+                  data-has-listeners="true"
+                >
                   <Plus className="w-4 h-4 mr-2" />
                   Add Question
                 </Button>
@@ -993,6 +1081,8 @@ const AdminPortal: React.FC = () => {
                         key={`section-${section}-${index}`}
                         className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
                         onClick={() => handleExpandSection(section)}
+                        suppressHydrationWarning={true}
+                        data-has-listeners="true"
                       >
                         <div className="flex justify-between items-center">
                           <h3 className="text-lg font-medium text-gray-900">{section.toUpperCase()}</h3>
@@ -1037,18 +1127,27 @@ const AdminPortal: React.FC = () => {
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
                     {users.map((user, index) => (
-                      <tr key={`user-${user._id}-${index}`} className="hover:bg-gray-50">
+                      <tr key={`user-${user._id}-${index}`} className="hover:bg-gray-50" data-has-listeners="true">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{index + 1}</div>
+                          <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                            {index + 1}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{user.name}</div>
+                          <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                            {user.name}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">{user.email}</div>
+                          <div className="text-sm font-medium text-gray-900" suppressHydrationWarning={true}>
+                            {user.email}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                          <span
+                            className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800"
+                            suppressHydrationWarning={true}
+                          >
                             {user.role}
                           </span>
                         </td>
@@ -1058,6 +1157,8 @@ const AdminPortal: React.FC = () => {
                             variant="outline"
                             size="sm"
                             className="text-red-600 hover:text-red-700"
+                            suppressHydrationWarning={true}
+                            data-has-listeners="true"
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -1075,7 +1176,12 @@ const AdminPortal: React.FC = () => {
           {activeSection === "signup" && (
             <div className="bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-xl font-semibold mb-6">Add New User</h2>
-              <form onSubmit={handleAddUser} className="max-w-md space-y-6">
+              <form
+                onSubmit={handleAddUser}
+                className="max-w-md space-y-6"
+                suppressHydrationWarning={true}
+                data-has-listeners="true"
+              >
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                     Name
@@ -1086,6 +1192,8 @@ const AdminPortal: React.FC = () => {
                     onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
                     placeholder="Enter name"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
                 </div>
                 <div>
@@ -1099,6 +1207,8 @@ const AdminPortal: React.FC = () => {
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
                     placeholder="Enter email"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
                 </div>
                 <div>
@@ -1112,9 +1222,11 @@ const AdminPortal: React.FC = () => {
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
                     placeholder="Enter password"
                     required
+                    suppressHydrationWarning={true}
+                    data-has-listeners="true"
                   />
                 </div>
-                <Button type="submit" className="w-full">
+                <Button type="submit" className="w-full" suppressHydrationWarning={true} data-has-listeners="true">
                   <UserPlus className="w-4 h-4 mr-2" />
                   Add User
                 </Button>
@@ -1125,53 +1237,66 @@ const AdminPortal: React.FC = () => {
         <ToastContainer position="top-center" autoClose={3000} style={{ zIndex: 9999 }} />
       </div>
 
-      <Dialog open={isSubmissionDialogOpen} onOpenChange={setIsSubmissionDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Submission Details</DialogTitle>
-            <DialogDescription>Review the user's answers by section</DialogDescription>
+      <Dialog open={isSubmissionDialogOpen} onOpenChange={setIsSubmissionDialogOpen} data-has-listeners="true">
+        <DialogContent
+          className="max-w-4xl max-h-[80vh] overflow-y-auto"
+          suppressHydrationWarning={true}
+          data-has-listeners="true"
+        >
+          <DialogHeader suppressHydrationWarning={true} data-has-listeners="true">
+            <DialogTitle suppressHydrationWarning={true} data-has-listeners="true">
+              Submission Details
+            </DialogTitle>
+            <DialogDescription suppressHydrationWarning={true} data-has-listeners="true">
+              Review the user's answers by section
+            </DialogDescription>
           </DialogHeader>
           {selectedSubmission && (
-            <div className="space-y-6">
+            <div className="space-y-6" suppressHydrationWarning={true}>
               {Object.entries(selectedSubmission).map(([section, answers]: [string, any]) => (
-                <div key={section} className="border rounded-lg p-4">
+                <div key={section} className="border rounded-lg p-4" suppressHydrationWarning={true}>
                   <h3 className="text-lg font-semibold mb-4 capitalize">{section} Section</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Question</TableHead>
-                        <TableHead>User Answer</TableHead>
-                        <TableHead>Correct Answer</TableHead>
-                        <TableHead>Result</TableHead>
-                        {section === "coding" && <TableHead>Test Cases</TableHead>}
+                  <Table suppressHydrationWarning={true}>
+                    <TableHeader suppressHydrationWarning={true}>
+                      <TableRow suppressHydrationWarning={true}>
+                        <TableHead suppressHydrationWarning={true}>Question</TableHead>
+                        <TableHead suppressHydrationWarning={true}>User Answer</TableHead>
+                        <TableHead suppressHydrationWarning={true}>Correct Answer</TableHead>
+                        <TableHead suppressHydrationWarning={true}>Result</TableHead>
+                        {section === "coding" && <TableHead suppressHydrationWarning={true}>Test Cases</TableHead>}
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
+                    <TableBody suppressHydrationWarning={true}>
                       {answers.map((response: any, index: number) => (
-                        <TableRow key={index}>
-                          <TableCell className="max-w-md">{response.question.text}</TableCell>
-                          <TableCell>
+                        <TableRow key={index} suppressHydrationWarning={true}>
+                          <TableCell className="max-w-md" suppressHydrationWarning={true}>
+                            {response.question?.text || "N/A"}
+                          </TableCell>
+                          <TableCell suppressHydrationWarning={true}>
                             {section === "coding" ? (
-                              <div className="max-h-32 overflow-y-auto">
-                                <pre className="text-sm bg-muted p-2 rounded">{response.code || response.answer}</pre>
+                              <div className="max-h-32 overflow-y-auto" suppressHydrationWarning={true}>
+                                <pre className="text-sm bg-muted p-2 rounded" suppressHydrationWarning={true}>
+                                  {response.code || response.answer || "N/A"}
+                                </pre>
                               </div>
                             ) : (
-                              response.answer
+                              response.answer || "N/A"
                             )}
                           </TableCell>
-                          <TableCell>{response.question.answer || "N/A"}</TableCell>
-                          <TableCell>
+                          <TableCell suppressHydrationWarning={true}>{response.question?.answer || "N/A"}</TableCell>
+                          <TableCell suppressHydrationWarning={true}>
                             <span
                               className={`px-2 py-1 rounded-full text-xs font-semibold ${
                                 response.isCorrect ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"
                               }`}
+                              suppressHydrationWarning={true}
                             >
                               {response.isCorrect ? "Correct" : "Incorrect"}
                             </span>
                           </TableCell>
                           {section === "coding" && (
-                            <TableCell>
-                              {response.testCasesPassed}/{response.totalTestCases} passed
+                            <TableCell suppressHydrationWarning={true}>
+                              {response.testCasesPassed || 0}/{response.totalTestCases || 0} passed
                             </TableCell>
                           )}
                         </TableRow>
